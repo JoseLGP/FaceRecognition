@@ -12,9 +12,9 @@ Paper link: https://arxiv.org/pdf/1503.03832.pdf
 
 The system works as follows:
 
-a) Face Detection: Using the MTCNN library 
-b) Face Features Extraction: Using a FaceNet pre-trained model
-c) Face Recognition: using different threshold values to compare embeddings (from 0.1 to 1.0)
+	a) Face Detection: Using the MTCNN library.
+	b) Face Features Extraction: Using a FaceNet pre-trained model.
+	c) Face Recognition: using different threshold values to compare embeddings (from 0.1 to 1.0).
 
 2) Final Algorithm (to work on it): the idea is now to improve the (VAL,FAR) rates by the use of a multi-class classifier (e.g. SVM), and to incorporate this recognition method for online recognition (e.g. web-cam).
 
