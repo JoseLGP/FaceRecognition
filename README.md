@@ -25,18 +25,21 @@ c) Face Recognition: using different threshold values to compare embeddings (fro
 - Libraries and Dependencies:
 
 * General Dependencies:
-$ sudo apt-get install build-essential cmake unzip pkg-config
-$ sudo apt-get install libxmu-dev libxi-dev libglu1-mesa libglu1-mesa-dev
-$ sudo apt-get install libjpeg-dev libpng-dev libtiff-dev
-$ sudo apt-get install libavcodec-dev libavformat-dev libswscale-dev libv4l-dev
-$ sudo apt-get install libxvidcore-dev libx264-dev
-$ sudo apt-get install libgtk-3-dev
-$ sudo apt-get install libopenblas-dev libatlas-base-dev liblapack-dev gfortran
-$ sudo apt-get install libhdf5-serial-dev
-$ sudo apt-get install python3-dev python3-tk python-imaging-tk
-$ pip install opencv-contrib-python
-$ pip install tensorflow
-$ pip install keras
+```console
+jose@Amethyst:~$ sudo apt-get install build-essential cmake unzip pkg-config
+jose@Amethyst:~$ sudo apt-get install libxmu-dev libxi-dev libglu1-mesa libglu1-mesa-dev
+jose@Amethyst:~$ sudo apt-get install libjpeg-dev libpng-dev libtiff-dev
+jose@Amethyst:~$ sudo apt-get install libxvidcore-dev libx264-dev
+jose@Amethyst:~$ sudo apt-get install libgtk-3-dev
+jose@Amethyst:~$ sudo apt-get install libopenblas-dev libatlas-base-dev liblapack-dev gfortran
+jose@Amethyst:~$ sudo apt-get install libhdf5-serial-dev
+jose@Amethyst:~$ sudo apt-get install libavcodec-dev libavformat-dev libswscale-dev libv4l-dev
+jose@Amethyst:~$ sudo apt-get install python3-dev python3-tk python-imaging-tk
+jose@Amethyst:~$ pip install opencv-contrib-python
+
+```
+Based on: https://www.pyimagesearch.com/2019/01/30/ubuntu-18-04-install-tensorflow-and-keras-for-deep-learning/
+
 
 * MTCNN (Multi-Task Convolutional Neural Network
 	1. Link: https://github.com/ipazc/mtcnn
@@ -79,6 +82,6 @@ Our implementation can be found in `notebooks/`. The content is:
 * Sensitivity_analysis: General procedures used to get the data from the datasets (face extraction and feature extraction) and procedures to rebuild the models we used here (no-retrainable and re-trainable models).
 
 
-By:
-- Patricia Franco Troya
-- José Luis Gallardo P.
+## Implementation made by: 
+- Patricia Franco Troya (UTFSM)
+- José Luis Gallardo P. (UTFSM)
