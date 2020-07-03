@@ -22,8 +22,6 @@ c) Face Recognition: using different threshold values to compare embeddings (fro
 
 - Language used: Python 3.7.x
 
-- Libraries and Dependencies:
-
 * General Dependencies:
 ```console
 jose@Amethyst:~$ sudo apt-get install build-essential cmake unzip pkg-config
@@ -40,38 +38,39 @@ jose@Amethyst:~$ pip install opencv-contrib-python
 ```
 Based on: https://www.pyimagesearch.com/2019/01/30/ubuntu-18-04-install-tensorflow-and-keras-for-deep-learning/
 
+* Specific Dependencies:
 
-* MTCNN (Multi-Task Convolutional Neural Network
-	1. Link: https://github.com/ipazc/mtcnn
-	2. Install: `pip install mtcnn`
-* PIL (Python Imaging Library)
-	1. Link: https://pypi.org/project/Pillow/2.2.2/
-	2. Install: `pip install Pillow`
-* Matplotlib:
-	1. Link: https://pypi.org/project/matplotlib/
-	1. Install: `pip install matplotlib`
-* Numpy:
-	1. Link: https://pypi.org/project/numpy/
-	2. Install: `pip install numpy`
+	* MTCNN (Multi-Task Convolutional Neural Network
+		1. Link: https://github.com/ipazc/mtcnn
+		2. Install: `pip install mtcnn`
+	* PIL (Python Imaging Library)
+		1. Link: https://pypi.org/project/Pillow/2.2.2/
+		2. Install: `pip install Pillow`
+	* Matplotlib:
+		1. Link: https://pypi.org/project/matplotlib/
+		1. Install: `pip install matplotlib`
+	* Numpy:
+		1. Link: https://pypi.org/project/numpy/
+		2. Install: `pip install numpy`
 
-* Virtualenv (optional, but recommended):
-	1. Link: https://pypi.org/project/virtualenv/
-	2. Install: `pip install virtualenv`
-* Scipy:
-	1. Link: scipy.org/install.html
-	2. Install: `pip install scipy`
-* imutils, h5py, requests and progressbar2:
-	1. Link: ...
-	2. Install: `pip install imutils h5py requests progressbar2`
-* scikit-learn & scikit-image:
-	1. Link: https://scikit-learn.org/stable/install.html
-	2. Install: `pip install scikit-learn scikit-image`
-* Tensorflow:
-	1. Link: https://www.tensorflow.org/install/pip
-	2. Install: `pip install tensorflow`
-* Keras:
-	1. Link: https://keras.io/
-	2. Install: `pip install keras`
+	* Virtualenv (optional, but recommended):
+		1. Link: https://pypi.org/project/virtualenv/
+		2. Install: `pip install virtualenv`
+	* Scipy:
+		1. Link: scipy.org/install.html
+		2. Install: `pip install scipy`
+	* imutils, h5py, requests and progressbar2:
+		1. Link: ...
+		2. Install: `pip install imutils h5py requests progressbar2`
+	* scikit-learn & scikit-image:
+		1. Link: https://scikit-learn.org/stable/install.html
+		2. Install: `pip install scikit-learn scikit-image`
+	* Tensorflow:
+		1. Link: https://www.tensorflow.org/install/pip
+		2. Install: `pip install tensorflow`
+	* Keras:
+		1. Link: https://keras.io/
+		2. Install: `pip install keras`
 
 ## Our Code
 
