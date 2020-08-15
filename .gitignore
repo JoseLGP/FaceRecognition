@@ -1,1 +1,12 @@
 .ipynb_checkpoints/
+imgs/5-celebrities-dataset.zip
+imgs/5-celebrities-dataset/
+imgs/lfw_extracted.zip
+imgs/lfw_extracted/
+notebooks/elton_john_asdf.jpg
+notebooks/picture.npz
+notebooks/predicted vs. expected-LFW.png
+notebooks/predicted vs. expected.png
+notebooks/svc.sav
+notebooks/5-celebrity-faces-dataset_val.npz
+notebooks/picture-embeddings.npz
