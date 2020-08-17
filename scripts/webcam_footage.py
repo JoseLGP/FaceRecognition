@@ -53,7 +53,8 @@ def extract_face(frame, required_size=(160, 160)):
     image = Image.fromarray(face)
     image = image.resize(required_size)
     face_array = asarray(image)
-    return face_array
+    bbox_dims = [x1, y1, x2, y2]
+    return face_array, bbox_dims
 
 # get the face embedding for one face
 def get_embedding(model, face_pixels):
@@ -68,46 +69,21 @@ def get_embedding(model, face_pixels):
     yhat = model.predict(samples)
     return yhat[0] 
       
-# draw an image with detected objects
-def draw_image_with_boxes(filename, result_list):
-    # load the image
-    data = pyplot.imread(filename)
-    # plot the image
-    pyplot.imshow(data)
-    # get the context for drawing boxes
-    ax = pyplot.gca()
-    # plot each box
-    for result in result_list:
-        # get coordinates
-        x, y, width, height = result['box']
-        # create the shape
-        rect = Rectangle((x, y), width, height, fill=False, color='red')
-        # draw the box
-        ax.add_patch(rect)
-        # set labes
-        if result != result_list[0]:                                       
-            ax.text(x,y - 1, "Unknown", fontsize = 13, color = 'red')
-        else:
-            for i in range(len(labels)):
-                if class_index == i:
-                    ax.text(x,y - 1,labels[i], fontsize = 13,color = 'red') 
-#       cv2.putText(data, "rect", (x, y), cv2.FONT_HERSHEY_SIMPLEX, 4, (0, 0, 255), 4)
-        
-#                   name = labels[i]
-#                   cv2.putText(data, name, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.60, (0, 0, 0), 1) 
-#       if class_index != i:
-#           cv2.putText(data, 'Unknown', (x,y), cv2.FONT_HERSHEY_SIMPLEX, 0.60, (0, 0, 0), 1)       
-#   # show the plot
-#   cv2.imshow("Detected faces", data)
-    #pyplot.imshow()    
-    # T0 load and hold the image
-#   cv2.waitKey(0)
-    # To close the window after the required kill value was provided
-#   cv2.destroyAllWindows()
-    pyplot.show()
 
 def main():
     cam = cv2.VideoCapture(0)
+
+    mode = "personal"
+    facenet_path = "../models/facenet_keras.h5"
+
+    if mode == "personal":
+        model_name = "../models/svc3.sav"
+        labels = ("Jose_Luis", "Patricia")
+
+    clf = joblib.load(model_name)
+    emb_extractor = load_model(facenet_path)
+    emb2 = list()
+
 
     # Check if the webcam is opened correctly
     if not cam.isOpened():
@@ -115,23 +91,35 @@ def main():
 
     while True:
         try:
-            #ret, frame = cam.read()
-            #frame = cv2.flip(frame, 1)
             t1 = time.time()
             frame = get_frame(cam)
-            face = extract_face(frame)
-            #frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            face, bbox = extract_face(frame)
+            x1, y1, x2, y2 = bbox
+            img2 = cv2.rectangle(frame, (x1, y1), (x2, y2), color = (0,255,0), thickness = 3)
+
+            # Prediction tasks
+            emb = get_embedding(emb_extractor, face)
+            emb2 = list()
+            emb2.append(emb)
+            emb2 = np.asarray(emb2)
+            y_class = clf.predict(emb2)
+            y_probs = clf.predict_proba(emb2)
+            class_index = y_class[0]
+            class_proba = y_probs[0, class_index] * 100
+            img3 = cv2.putText(frame, str(labels[class_index]), (x1, y1-25), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), thickness = 3)
+
+
             cv2.imshow("Camera", frame)
-            cv2.imshow("Face detected", face)
+            #cv2.imshow("Face detected", face)
             t2 = time.time()
+
+
+
             framespeed = 1/(t2-t1)
             print("FPS: " + str(framespeed))
             print(type(frame))
-            print("Pause for 1 sec...")
-            time.sleep(1)
-
-            #frame = cv2.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
-            #cv2.imshow('Input', frame)
+            #print("Proba: " + str(clas_proba))
+            #print(emb)
 
             c = cv2.waitKey(1)
             if c == 27:
