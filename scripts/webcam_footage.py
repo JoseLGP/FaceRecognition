@@ -1,6 +1,8 @@
 # For webcam
 import cv2
 import time
+import os
+import sys
 
 # For Face Embedding Jobs
 from matplotlib import pyplot
@@ -17,6 +19,8 @@ from matplotlib.patches import Rectangle
 import joblib
 import cv2
 
+#os.environ['OPENCV_VIDEOIO_PRIORITY_MSMF'] = '0'
+
 ############################
 ##### WEBCAM FUNCTIONS #####
 ############################
@@ -24,7 +28,7 @@ import cv2
 def get_frame(cam):
     ret, frame = cam.read()
     frame = cv2.flip(frame, 1)
-    return frame
+    return frame, ret
 
 ####################################
 ##### FACE EMBEDDING FUNCTIONS #####
@@ -83,33 +87,74 @@ def main():
     clf = joblib.load(model_name)
     emb_extractor = load_model(facenet_path)
     emb2 = list()
+    face_detected = False
 
 
     # Check if the webcam is opened correctly
     if not cam.isOpened():
         raise IOError("Cannot open webcam")
 
+    frame, ret = get_frame(cam)
+    face, bbox = extract_face(frame)
+    x1, y1, x2, y2 = bbox
+    track_window = (x1, y1, x2, y2)
+    roi = frame[x1:x2, y1:y2]
+    hsv_roi = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    mask = cv2.inRange(hsv_roi, np.array([0., 60., 32. ]), np.array([180., 255., 255.]))
+    roi_hist = cv2.calcHist([hsv_roi], [0], mask, [180], [0, 180])
+    cv2.normalize(roi_hist, roi_hist, 0, 255, cv2.NORM_MINMAX)
+    term_crit = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 1)
+
     while True:
         try:
             t1 = time.time()
-            frame = get_frame(cam)
-            face, bbox = extract_face(frame)
-            x1, y1, x2, y2 = bbox
-            img2 = cv2.rectangle(frame, (x1, y1), (x2, y2), color = (0,255,0), thickness = 3)
+            frame, ret = get_frame(cam)
+
+            if ret == True:
+                hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+                dst = cv2.calcBackProject([hsv], [0], roi_hist, [0, 180], 1)
+                ret, track_window = cv2.meanShift(dst, track_window, term_crit)
+
+                x, y, w, h = track_window
+                img2 = cv2.rectangle(frame, (x, y), (x+w, y+h), 255, 2)
+
+
+            #if not face_detected:
+                #face, bbox = extract_face(frame)
+                #face_detected = True
+                #x1, y1, x2, y2 = bbox
+                #region_to_track = frame[x1:x2, y1, y2]
+                #region_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+                #mask = cv2.inRange(region_hsv, np.array([0.,60.,32.]), np.array([180.,255.,255.]))
+                #roi_hist = cv2.calcHist([hsv_roi], [0], mask, [180], [0.180])
+                #cv2.normalize(roi_hist, roi_hist, 0, 255, cv2.NORM_MINMAX)
+                #term_crit = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 1)
+                #img2 = cv2.rectangle(frame, (x1, y1), (x2, y2), color = (0,255,0), thickness = 3)
 
             # Prediction tasks
-            emb = get_embedding(emb_extractor, face)
-            emb2 = list()
-            emb2.append(emb)
-            emb2 = np.asarray(emb2)
-            y_class = clf.predict(emb2)
-            y_probs = clf.predict_proba(emb2)
-            class_index = y_class[0]
-            class_proba = y_probs[0, class_index] * 100
-            img3 = cv2.putText(frame, str(labels[class_index]), (x1, y1-25), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), thickness = 3)
+                #emb = get_embedding(emb_extractor, face)
+                #emb2 = list()
+                #emb2.append(emb)
+                #emb2 = np.asarray(emb2)
+                #y_class = clf.predict(emb2)
+                #y_probs = clf.predict_proba(emb2)
+                #class_index = y_class[0]
+                #class_proba = y_probs[0, class_index] * 100
+                #img3 = cv2.putText(frame, str(labels[class_index]), (x1, y1-25), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), thickness = 3)
+            #else:
+                #print("Face obtained")
+
+            #hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+            #dst = cv2.calcBackProject([hsv], [0], roi_hist, [0, 180], 1)
+            #ret, track_window = cv2.meanShift(dst, track_window, term_crit)
+            #x,y,w,h = track_window
+            #img2 = cv2.rectangle(frame, (x,y), (x+w,y+h), 255, 2)
 
 
             cv2.imshow("Camera", frame)
+            #cv2.imshow("To track", region_to_track)
+            #cv2.imshow("CamShift", img2)
+            cv2.imshow("Face found", face)
             #cv2.imshow("Face detected", face)
             t2 = time.time()
 
@@ -131,6 +176,100 @@ def main():
     cam.release()
     cv2.destroyAllWindows()
 
+def main2():
+    cam = cv2.VideoCapture(0)
+
+    mode = "personal"
+    facenet_path = "../models/facenet_keras.h5"
+
+    if mode == "personal":
+        model_name = "../models/svc3.sav"
+        labels = ("Jose_Luis", "Patricia", "Unknown")
+
+    clf = joblib.load(model_name)
+    #emb_extractor = load_model(facenet_path)
+    #emb2 = list()
+    face_detected = False
+
+
+    # Check if the webcam is opened correctly
+    if not cam.isOpened():
+        raise IOError("Cannot open webcam")
+
+    frame, ret = get_frame(cam)
+
+    if ret == True:
+        cv2.imshow("INITIAL FRAME", frame)
+        face, bbox = extract_face(frame)
+        x1, y1, x2, y2 = bbox
+        track_window = (x1, y1, x2, y2)
+        print(track_window)
+        time.sleep(5)
+        roi = frame[x1:x2, y1:y2]
+        cv2.imshow("DETECTED FACE CROP", roi)
+        cv2.imshow("Face found", face)
+        hsv_roi = cv2.cvtColor(face, cv2.COLOR_BGR2HSV)
+        mask = cv2.inRange(hsv_roi, np.array([0., 60., 32. ]), np.array([180., 255., 255.]))
+        roi_hist = cv2.calcHist([hsv_roi], [0], mask, [180], [0, 180])
+        cv2.normalize(roi_hist, roi_hist, 0, 255, cv2.NORM_MINMAX)
+        term_crit = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 100, 1)
+
+    while True:
+        try:
+            t1 = time.time()
+            frame, ret = get_frame(cam)
+
+            if ret == True:
+                hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+                dst = cv2.calcBackProject([hsv], [0], roi_hist, [0, 180], 1)
+                ret, track_window = cv2.CamShift(dst, track_window, term_crit)
+
+                pts = cv2.boxPoints(ret)
+                pts = np.int0(pts)
+                img2 = cv2.polylines(frame, [pts], True, 255, 2)
+                print("Box dims: ", track_window)
+
+            # Prediction tasks
+                #emb = get_embedding(emb_extractor, face)
+                #emb2 = list()
+                #emb2.append(emb)
+                #emb2 = np.asarray(emb2)
+                #y_class = clf.predict(emb2)
+                #y_probs = clf.predict_proba(emb2)
+                #class_index = y_class[0]
+                #class_proba = y_probs[0, class_index] * 100
+                #img3 = cv2.putText(frame, str(labels[class_index]), (x1, y1-25), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), thickness = 3)
+            #else:
+                #print("Face obtained")
+
+            #hsv = cv2.cvtColo
+
+
+            cv2.imshow("Camera", frame)
+            #cv2.imshow("To track", region_to_track)
+            cv2.imshow("CamShift", track_window)
+            #cv2.imshow("HSV", hsv)
+            #cv2.imshow("Face detected", face)
+            t2 = time.time()
+
+            framespeed = 1/(t2-t1)
+            print("FPS: " + str(framespeed))
+            print(type(frame))
+
+            c = cv2.waitKey(1)
+            if c == 27:
+                break
+
+        except:
+            cam.release()
+            cv2.destroyAllWindows()
+
+    cam.release()
+    cv2.destroyAllWindows()
+
+
+
 
 if __name__ == "__main__":
-    main()
+    #main() # MeanShift
+    main2() #Camshift
