@@ -10,3 +10,4 @@ notebooks/predicted vs. expected.png
 notebooks/svc.sav
 notebooks/5-celebrity-faces-dataset_val.npz
 notebooks/picture-embeddings.npz
+notebooks/5-celebrity-faces-dataset.npz
