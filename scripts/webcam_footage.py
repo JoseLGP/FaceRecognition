@@ -50,7 +50,7 @@ def extract_face(frame, required_size=(160, 160)):
     x1, y1, width, height = results[0]['box']
     # bug fix
     x1, y1 = abs(x1), abs(y1)
-    x2, y2 = x1 + width, y1 + height
+    x2, y2 = x1 + abs(width), y1 + abs(height)
     # extract the face
     face = pixels[y1:y2, x1:x2]
     # resize pixels to the model size
@@ -187,9 +187,9 @@ def main2():
         labels = ("Jose_Luis", "Patricia", "Unknown")
 
     clf = joblib.load(model_name)
-    #emb_extractor = load_model(facenet_path)
-    #emb2 = list()
-    face_detected = False
+    emb_extractor = load_model(facenet_path)
+    emb2 = list()
+    #face_detected = False
 
 
     # Check if the webcam is opened correctly
@@ -204,20 +204,25 @@ def main2():
         x1, y1, x2, y2 = bbox
         track_window = (x1, y1, x2, y2)
         print(track_window)
-        time.sleep(5)
+        time.sleep(2)
         roi = frame[x1:x2, y1:y2]
+        roi_hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
+        face_hsv = cv2.cvtColor(face, cv2.COLOR_BGR2HSV)
         cv2.imshow("DETECTED FACE CROP", roi)
         cv2.imshow("Face found", face)
-        hsv_roi = cv2.cvtColor(face, cv2.COLOR_BGR2HSV)
-        mask = cv2.inRange(hsv_roi, np.array([0., 60., 32. ]), np.array([180., 255., 255.]))
-        roi_hist = cv2.calcHist([hsv_roi], [0], mask, [180], [0, 180])
+        cv2.imshow("DETECTED FACE CROP HSV", roi_hsv)
+        cv2.imshow("Face found HSV", face_hsv)
+        mask = cv2.inRange(face_hsv, np.array([0., 60., 32. ]), np.array([180., 255., 255.]))
+        #mask = cv2.inRange(hsv_roi, np.array([0., 60., 32. ]), np.array([200., 255., 255.])) # Threshold
+        roi_hist = cv2.calcHist([face_hsv], [0], mask, [180], [0, 180])
         cv2.normalize(roi_hist, roi_hist, 0, 255, cv2.NORM_MINMAX)
-        term_crit = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 100, 1)
+        term_crit = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 1)
 
     while True:
         try:
             t1 = time.time()
             frame, ret = get_frame(cam)
+            frame_real = np.array(frame)
 
             if ret == True:
                 hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -228,26 +233,33 @@ def main2():
                 pts = np.int0(pts)
                 img2 = cv2.polylines(frame, [pts], True, 255, 2)
                 print("Box dims: ", track_window)
+                xf, yf, wf, hf = track_window
+
+                frame2 = frame_real[yf:yf+hf, xf:xf+wf]
+
 
             # Prediction tasks
-                #emb = get_embedding(emb_extractor, face)
-                #emb2 = list()
-                #emb2.append(emb)
-                #emb2 = np.asarray(emb2)
-                #y_class = clf.predict(emb2)
-                #y_probs = clf.predict_proba(emb2)
-                #class_index = y_class[0]
-                #class_proba = y_probs[0, class_index] * 100
-                #img3 = cv2.putText(frame, str(labels[class_index]), (x1, y1-25), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), thickness = 3)
+                emb = get_embedding(emb_extractor, frame2)
+                emb2 = list()
+                emb2.append(emb)
+                emb2 = np.asarray(emb2)
+                y_class = clf.predict(emb2)
+                y_probs = clf.predict_proba(emb2)
+                class_index = y_class[0]
+                class_proba = y_probs[0, class_index] * 100
+                print("Proba: ", class_proba)
+                print(y_class)
+                print(y_probs)
+                print(emb2)
+                img3 = cv2.putText(frame, str(labels[class_index]), (xf, yf-25), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), thickness = 3)                
             #else:
                 #print("Face obtained")
 
-            #hsv = cv2.cvtColo
-
-
             cv2.imshow("Camera", frame)
+            cv2.imshow("Frame real", frame_real)
             #cv2.imshow("To track", region_to_track)
-            cv2.imshow("CamShift", track_window)
+            cv2.imshow("CamShift", hsv)
+            cv2.imshow("Shifting", frame2)
             #cv2.imshow("HSV", hsv)
             #cv2.imshow("Face detected", face)
             t2 = time.time()
@@ -268,8 +280,80 @@ def main2():
     cv2.destroyAllWindows()
 
 
+def main3():
+    cam = cv2.VideoCapture(0)
+
+    mode = "personal"
+    facenet_path = "../models/facenet_keras.h5"
+
+    if mode == "personal":
+        model_name = "../models/svc3.sav"
+        labels = ("Jose_Luis", "Patricia")
+
+    clf = joblib.load(model_name)
+    emb_extractor = load_model(facenet_path)
+    emb2 = list()
+    face_detected = False
+
+
+    # Check if the webcam is opened correctly
+    if not cam.isOpened():
+        raise IOError("Cannot open webcam")
+
+    frame, ret = get_frame(cam)
+    face, bbox = extract_face(frame)
+    #time.sleep(2)
+    x1, y1, x2, y2 = bbox
+
+    while True:
+        try:
+            t1 = time.time()
+            frame, ret = get_frame(cam)
+            face, bbox = extract_face(frame)
+            x1, y1, x2, y2 = bbox
+
+            img2 = cv2.rectangle(frame, (x1, y1), (x2, y2), 255, 2)
+
+            # Prediction tasks
+            emb = get_embedding(emb_extractor, face)
+            emb2 = list()
+            emb2.append(emb)
+            emb2 = np.asarray(emb2)
+            y_class = clf.predict(emb2)
+            y_probs = clf.predict_proba(emb2)
+            class_index = y_class[0]
+            class_proba = y_probs[0, class_index] * 100
+            img3 = cv2.putText(frame, str(labels[class_index]), (x1, y1-25), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), thickness = 3)
+
+
+            cv2.imshow("Camera", frame)
+            cv2.imshow("Face found", face)
+            t2 = time.time()
+
+            framespeed = 1/(t2-t1)
+            print("FPS: " + str(framespeed))
+            print(type(frame))
+            print("Proba: " + str(clas_proba))
+            #print(emb)
+
+            c = cv2.waitKey(1)
+            if c == 27:
+                break
+        except:
+            cam.release()
+            cv2.destroyAllWindows()
+
+    cam.release()
+    cv2.destroyAllWindows()
+
 
 
 if __name__ == "__main__":
-    #main() # MeanShift
-    main2() #Camshift
+    mode = 2 # 1: MeanShift - 2: CamShift - 3: online MTCNN
+
+    if mode == 1:
+        main() # MeanShift
+    if mode == 2:        
+        main2() #Camshift
+    if mode == 3:
+        main3() # online MTCNN
